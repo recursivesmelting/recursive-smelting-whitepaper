@@ -39,12 +39,7 @@ Data concerning token quantity and token ID is passed from primitive transaction
 To prevent the need to traverse backwards through \emph{all} prior transactions to the genesis block, we attach a verifiable computation (more specifically a succinct non-interactive argument of knowledge, or SNARK) to each primitive transaction which, when verified, proves the prior transactions are all themselves valid primitive transactions. Recursive proof techniques are employed to ensure that this method is tractable. 
 
 \section{Primitive Transactions}\label{sec:primtrans}
-The transaction graph of Recursive Smelting can be thought of as a closed subgraph of all Bitcoin transactions\footnote{Absolute closure is not feasible due to miners requiring transaction fees.} and is composed by transactions adhering to one of several primitive transaction formats. Each primitive transaction (excluding the genesis transaction) contains an assert output which, when unspent, indicates the following:
-\begin{enumerate}
-	\item Ownership of a certain quantity of tokens
-	\item Validation that the transaction and its predecessors have adhered to the protocol
-\end{enumerate}
-which in turn verifies the asserted ownership. The transfer of ownership from Alice to Bob (in its most basic form) is achieved by Alice signing Bob's address (and a nonce), allowing Bob to spend Alice's ownership UTXO using a revoke input in an ownership transaction of his own.
+The transaction graph of Recursive Smelting can be thought of as a closed subgraph of all Bitcoin transactions\footnote{Absolute closure is not feasible due to miners requiring transaction fees.} and is composed by transactions adhering to one of several primitive transaction formats. Each primitive transaction (excluding the genesis transaction) contains an assert output which, when unspent indicates ownership of a certain quantity of tokens.  Validation that the transaction and its predecessors have adhered to the protocol verifies the asserted ownership. The transfer of ownership from Alice to Bob (in its most basic form) is achieved by Alice signing Bob's address (and a nonce), allowing Bob to spend Alice's ownership UTXO using a revoke input in an ownership transaction of his own.
 
 \subsection{Ownership Transaction}\label{subsec:basicownershiptx}
 In the most simple case, ownership transfer can be described as the movement of tokens from Alice's wallet into Bob's wallet. Bob's ownership transaction consists of the following:
@@ -82,7 +77,7 @@ The concatenation and then execution of the signature and pubkey script above pl
 % $\langle \text{proof} \rangle$ OP_RETURN
 % \end{lstlisting}
 
-One might wonder; why require that Alice signs a nonce and Bob's address to transfer ownership when she could instead pass ownership by using hashlocked output and supplying Bob with a preimage? This is answered with the following scenario: Suppose Alice presented Bob with the preimage and he then creates an ownership transaction with a revoke input script containing the preimage. Notice that the preimage is now public knowledge to the nodes on the network, allowing them to claim ownership before Bob by creating their own ownership transactions. The nonce is included in the signed data so that the same signature cannot be reused by Bob to claim additional tokens without Alice's intent.
+One might wonder; why require that Alice signs a nonce and Bob's address to transfer ownership when she could instead pass ownership by using hashlocked output and supplying Bob with a preimage? This is answered with the following scenario: Suppose Alice presented Bob with the preimage and he then creates an ownership transaction with a revoke input script containing the preimage. Notice that the preimage is now public knowledge to the nodes on the network, opening up the possibility for them to claim ownership before Bob by creating their own ownership transactions. The nonce is included in the signed data so that the same signature cannot be reused by Bob to claim additional tokens without Alice's intent.
 
 The format of the ownership transaction naturally generalizes to multiple inputs and outputs and supports multiple token IDs within a single transaction.
 
@@ -164,7 +159,7 @@ Note that if $P$ is $\langle 1 \rangle$ and $R$ is empty then a flexible assert 
 % An addition requirement is that $X$ not contain OP\_IF for if it was permitted one could construct $X$ and $Y$ to manipulate the control flow, avoid execution of $R \; A \text{ OP\_VERIFY }$ and hence violate the conservation of token quantity between transactions. Similarly, in Section~\ref{subsec:gentrans} we encounter $X$ and $Y$ and impose the same requirement on $X$.
 
 \section{Consensus Rules}
-In Recursive Smelting the protocol requires users adhere to consensus on what constitutes a valid ownership transaction. The consensus rules can be stated as recursively as, for example, "a  transaction is a valid primitive transaction if:
+In Recursive Smelting the protocol requires users adhere to consensus on what constitutes a valid ownership transaction. The consensus rules can be stated as recursively as "a  transaction is a valid primitive transaction if:
     \begin{enumerate}
         \item It adheres to one of the primitive transaction formats 
         \item All inputs with revoke or minting pubkey scripts must  spend outputs in a transaction with primitive transaction format."
