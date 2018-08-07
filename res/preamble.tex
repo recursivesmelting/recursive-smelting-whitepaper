@@ -1,0 +1,23 @@
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,width=170mm,top=18mm,bottom=22mm,includeheadfoot]{geometry}
+\usepackage{amsmath}
+\usepackage{multicol}
+\usepackage{tikz}
+\usepackage{hyperref}
+
+
+\usepackage{amssymb}
+\usepackage{listings}
+\usepackage{caption}
+\DeclareCaptionFormat{listing}{\rule{\dimexpr\linewidth\relax}{0.4pt}\par\vskip1pt#1#2#3}
+\captionsetup[lstlisting]{format=listing, singlelinecheck=false, margin=0pt, font={small}}
+
+\lstset{frame=top, basicstyle=\small, numbers=left, numbersep=10pt, tabsize=2, extendedchars=true, breaklines=true, mathescape=true, xleftmargin=17pt, framexleftmargin=17pt, framexrightmargin=0pt, framexbottommargin=5pt, framextopmargin=5pt}
+
+\let\oldlangle\langle
+\let\oldrangle\rangle
+\renewcommand{\langle}{\oldlangle \;}
+\renewcommand{\rangle}{\; \oldrangle}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.3\baselineskip}
