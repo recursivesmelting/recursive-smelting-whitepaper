@@ -77,7 +77,7 @@ The concatenation and then execution of the signature and pubkey script above pl
 % $\langle \text{proof} \rangle$ OP_RETURN
 % \end{lstlisting}
 
-One might wonder; why require that Alice signs a nonce and Bob's address to transfer ownership when she could instead pass ownership by using hashlocked output and supplying Bob with a preimage? This is answered with the following scenario: Suppose Alice presented Bob with the preimage and he then creates an ownership transaction with a revoke input script containing the preimage. Notice that the preimage is now public knowledge to the nodes on the network, opening up the possibility for them to claim ownership before Bob by creating their own ownership transactions. The nonce is included in the signed data so that the same signature cannot be reused by Bob to claim additional tokens without Alice's intent.
+One might wonder; why require that Alice signs a nonce and Bob's address to transfer ownership when she could instead pass ownership by using hashlocked output and supplying Bob with a preimage? This is answered with the following scenario: Suppose Alice presented Bob with the preimage and he then creates an ownership transaction with a revoke input script containing the preimage. Notice that the preimage is now public knowledge to the nodes on the network, opening up the possibility for them to claim ownership before Bob. The nonce is included in the signed data so that the same signature cannot be reused by Bob to claim additional tokens without Alice's intent.
 
 The format of the ownership transaction naturally generalizes to multiple inputs and outputs and supports multiple token IDs within a single transaction.
 
