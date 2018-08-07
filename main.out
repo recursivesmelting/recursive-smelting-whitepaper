@@ -1,0 +1,16 @@
+\BOOKMARK [1][-]{section.1}{1. Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{2. Overview}{}% 2
+\BOOKMARK [1][-]{section.3}{3. Primitive Transactions}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{3.1. Ownership Transaction}{section.3}% 4
+\BOOKMARK [2][-]{subsection.3.2}{3.2. Genesis Transactions}{section.3}% 5
+\BOOKMARK [2][-]{subsection.3.3}{3.3. Minting Transaction}{section.3}% 6
+\BOOKMARK [2][-]{subsection.3.4}{3.4. Flexible Asserts and Revoke Scripts}{section.3}% 7
+\BOOKMARK [1][-]{section.4}{4. Consensus Rules}{}% 8
+\BOOKMARK [1][-]{section.5}{5. Proofs}{}% 9
+\BOOKMARK [2][-]{subsection.5.1}{5.1. Non-recursive Proofs}{section.5}% 10
+\BOOKMARK [2][-]{subsection.5.2}{5.2. Recursive Proofs}{section.5}% 11
+\BOOKMARK [1][-]{section.6}{6. Applications}{}% 12
+\BOOKMARK [2][-]{subsection.6.1}{6.1. Provable Token Burns}{section.6}% 13
+\BOOKMARK [2][-]{subsection.6.2}{6.2. Token Issue Escrow}{section.6}% 14
+\BOOKMARK [2][-]{subsection.6.3}{6.3. Atomic Swaps: Bitcoin-to-Token}{section.6}% 15
+\BOOKMARK [2][-]{subsection.6.4}{6.4. Anyone-Can-Revoke}{section.6}% 16
