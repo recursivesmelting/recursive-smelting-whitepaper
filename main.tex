@@ -176,7 +176,7 @@ While possible, it is undesirable to trace back through the transaction graph to
     \import{res/}{basictxproofs}
 \end{center}
 
-We adopt notation from order theory where $a \lessdot b$ means that transaction $b$ has an input spending transaction (mint signature or revoke) $a$, and $a < b$ means there exists a sequence $a \lessdot \dots \lessdot b$.
+We adopt notation from order theory where $a \lessdot b$ means that transaction $b$ has an input spending transaction (mint signature and revoke) $a$, and $a < b$ means there exists a sequence $a \lessdot \dots \lessdot b$.
 \subsection{Non-recursive Proofs}
 Acting as an intermediary step, we describe the construction of a non-recursive proof.
 
@@ -211,7 +211,7 @@ For each $x \lessdot y$ we have that
     \item there exists a Merkle proof showing that $x$ is contained within a block $b_{i}$ associated to $h_{i}$
 \end{enumerate}
 
-Again, for a user to then validate $x$ is an ownership transaction they are required to verify $P(h_{0}, \dots, h_{n})$ is true and that $y$ itself is a primitive transaction.
+Again, for a user to then validate $x$ they are required to verify $P(h{0}, \dots, h{n})$ is true and that $y$ itself is a primitive transaction.
 
 Verification of recursive proofs is fast, and proving is fast and SPV compatible as only $x$ such that $x \lessdot y$ are required terms (rather than a full transaction tree).
 
