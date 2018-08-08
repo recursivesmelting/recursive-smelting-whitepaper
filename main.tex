@@ -1,5 +1,6 @@
 \documentclass[9pt,oneside]{amsart}
 \usepackage{import}
+\usepackage{multicol}
 \import{res/}{preamble}
 
 \title{Recursive Smelting: A Token Layer Protocol on Bitcoin}
@@ -10,6 +11,8 @@
     We present a tokenization protocol for the Bitcoin platform wherein a complete chain of custody connecting issuance and spending can be proven using minimal overhead and an open source verifier.
 \end{abstract}
 \maketitle
+\begin{multicols}{2}
+	
 
 \section{Introduction}
 During Bitcoin's history, there have been several proposed token proposals. In recent months, a new wave of interest has resulted in the creation of many more. 
@@ -236,4 +239,6 @@ This allows for a decentralized exchange of tokens with Bitcoin being the base p
 In the circumstance that a token is widely traded and known to have substantial value, the possibility to pay the transaction fee in said token arises.
 
 To achieve this one could use a flexible assert with $Y$ including all data needed for revocation (a newly generated private/public key pair and signature on the pubkeyhash and nonce).
+
+\end{multicols}
 \end{document}
