@@ -17,8 +17,16 @@
 \node[draw, text width=1.5cm, align=center] (Revoke 3) at (5.75,2) {Revoke};
 \node[draw, text width=1.5cm, align=center] (Assert 3) at (5.75,1.25) {Assert};
 
+\iffalse
+\draw (7.125, 0.75) rectangle (9.125,2.875);
+\node[below right] at (7.125, 2.875) {TX 4};
+\node[draw, text width=1.5cm, align=center] (Revoke 4) at (8.125,2) {Revoke};
+\node[draw, text width=1.5cm, align=center] (Assert 4) at (8.125,1.25) {Assert};
+\fi
+
 \draw[->, thick] (Assert 1) -| (2.175, 2) |- (Revoke 2);
 \draw[->, thick] (Assert 2) -| (4.55, 2) |- (Revoke 3);
+%\draw[->, thick] (Assert 3) -| (6.95, 2) |- (Revoke 4);
 
 \end{tikzpicture}
 \vspace*{4mm}
