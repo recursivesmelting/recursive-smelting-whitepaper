@@ -21,3 +21,14 @@
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.3\baselineskip}
+
+\newsavebox\mybox
+\newenvironment{resizedtikzpicture}[1]{%
+	\def\mywidth{#1}%
+	\begin{lrbox}{\mybox}%
+		\begin{tikzpicture}
+	}{%
+		\end{tikzpicture}%
+	\end{lrbox}%
+	\resizebox{\mywidth}{!}{\usebox\mybox}%
+}
