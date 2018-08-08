@@ -21,7 +21,13 @@ Existing proposals typically fall into four distinct categories: \begin{enumerat
     \item Requiring a change to the Bitcoin protocol (e.g.\ \href{https://docs.google.com/document/d/1X-yrqBJNj6oGPku49krZqTMGNNEWnUJBRFjX7fJXvTs}{GROUP} and \href{https://en.wikipedia.org/wiki/RootStock}{RootStock})
     \item Requiring an extensive alternative ecosystem (e.g.\ \href{https://counterparty.io/docs/protocol_specification/}{Counterparty Cash} and \href{https://github.com/OmniLayer/spec}{Omni})
     \item Requiring a central issuer (e.g.\ \href{http://media.lokad.com/bitcoin/tokeda-2018-04-30.pdf}{Tokeda})
-    \item Requiring validation of the chain of prior token transactions reaching back to the genesis transaction (e.g. \href{https://github.com/simpleledger/simple-ledger-protocol}{SLP}, \href{https://github.com/Colored-Coins/Colored-Coins-Protocol-Specification}{Colu}, \href{https://github.com/OpenAssets/open-assets-protocol/blob/master/specification.mediawiki}{OpenAssets}, \href{http://coinspark.org/}{Coinspark}, \href{https://github.com/awemany/sito}{SITO}, \href{https://github.com/chromaway/ngcccbase/wiki/EPOBC_simple}{EPOBC})
+    \item Requiring validation of the chain of prior token transactions reaching back to the genesis transaction (e.g.
+    \href{http://coinspark.org/}{Coinspark},
+    \href{https://github.com/Colored-Coins/Colored-Coins-Protocol-Specification}{Colu},
+    \href{https://github.com/chromaway/ngcccbase/wiki/EPOBC_simple}{EPOBC},
+	\href{https://github.com/OpenAssets/open-assets-protocol/blob/master/specification.mediawiki}{OpenAssets},
+   \href{https://github.com/awemany/sito}{SITO},
+     \href{https://github.com/simpleledger/simple-ledger-protocol}{SLP})
 \end{enumerate}
 
 In Recursive Smelting we first construct a token residing in category (4), requiring validation of the chain of prior token transfer back to their genesis. We then supplement each transfer with (constant sized) proof of the token's history -- removing this requirement (4) entirely and replacing it with a fast and secure cryptographic verifiable computation.
