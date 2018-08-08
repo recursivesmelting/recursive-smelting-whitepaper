@@ -67,7 +67,7 @@ The format of the public key and signature scripts below allow Alice to transfer
 \begin{lstlisting}[title={\textbf{Alice's Assert PubKey Script}}]
 OP_TUCK OP_CHECKSIGVERIFY OP_TUCK
 $\langle \text{nonce} \rangle$ OP_CAT $\langle \text{Alice addr} \rangle$ OP_DATASIGVERIFY
-$\langle \text{token ID, quantity} \rangle$ OP_EQUAL
+$OP_SWAP \langle \text{token ID, quantity} \rangle$ OP_EQUAL
 \end{lstlisting}
 
 \begin{lstlisting}[title={\textbf{Bob's Revoke Signature Script}}]
