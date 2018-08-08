@@ -3,3 +3,5 @@
 *.out
 *.gz
 main.synctex.gz
+*.bbl
+*.blg

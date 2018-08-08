@@ -42,7 +42,7 @@ Data concerning token quantity and token ID is passed from primitive transaction
 To prevent the need to traverse backwards through \emph{all} prior transactions to the genesis block, we attach a verifiable computation (more specifically a succinct non-interactive argument of knowledge, or SNARK) to each primitive transaction which, when verified, proves the prior transactions are all themselves valid primitive transactions. Recursive proof techniques are employed to ensure that this method is tractable. 
 
 \section{Primitive Transactions}\label{sec:primtrans}
-The transaction graph of Recursive Smelting can be thought of as a closed subgraph of all Bitcoin transactions\footnote{Absolute closure is not feasible due to miners requiring transaction fees.} and is composed by transactions adhering to one of several primitive transaction formats. Each primitive transaction (excluding the genesis transaction) contains an assert output which, when unspent indicates ownership of a certain quantity of tokens.  Validation that the transaction and its predecessors have adhered to the protocol verifies the asserted ownership. The transfer of ownership from Alice to Bob (in its most basic form) is achieved by Alice signing Bob's address (and a nonce), allowing Bob to spend Alice's ownership UTXO using a revoke input in an ownership transaction of his own.
+The transaction graph of Recursive Smelting can be thought of as a closed subgraph of all Bitcoin transactions\footnote{Absolute closure is not feasible due to miners requiring transaction fees} and is composed by transactions adhering to one of several primitive transaction formats. Each primitive transaction (excluding the genesis transaction) contains an assert output which, when unspent indicates ownership of a certain quantity of tokens.  Validation that the transaction and its predecessors have adhered to the protocol verifies the asserted ownership. The transfer of ownership from Alice to Bob (in its most basic form) is achieved by Alice signing Bob's address (and a nonce), allowing Bob to spend Alice's ownership UTXO using a revoke input in an ownership transaction of his own.
 
 \subsection{Ownership Transaction}\label{subsec:basicownershiptx}
 In the most simple case, ownership transfer can be described as the movement of tokens from Alice's wallet into Bob's wallet. Bob's ownership transaction consists of the following:
@@ -58,8 +58,14 @@ These ownership transactions are then linked sequentially as shown in the follow
 
 The format of the public key and signature scripts below allow Alice to transfer ownership of her tokens tied to a nonce to Bob by means of signing that nonce and Bob's address. In a typical Bitcoin transaction, Alice's output ensures Bob's ability to transfer coins -- instead, here Alice's output ensures her ability to transfer tokens.
 
+%\begin{lstlisting}[title={\textbf{Alice's Assert PubKey Script}}]
+%OP_TUCK OP_CHECKSIGVERIFY
+%$\langle \text{nonce} \rangle$ OP_CAT $\langle \text{Alice addr} \rangle$ OP_DATASIGVERIFY
+%$\langle \text{token ID, quantity} \rangle$ OP_EQUAL
+%\end{lstlisting}
+
 \begin{lstlisting}[title={\textbf{Alice's Assert PubKey Script}}]
-OP_TUCK OP_CHECKSIGVERIFY
+OP_TUCK OP_CHECKSIGVERIFY OP_TUCK
 $\langle \text{nonce} \rangle$ OP_CAT $\langle \text{Alice addr} \rangle$ OP_DATASIGVERIFY
 $\langle \text{token ID, quantity} \rangle$ OP_EQUAL
 \end{lstlisting}
@@ -71,9 +77,14 @@ $\langle \text{``Bob addr, nonce'' signed by Alice addr} \rangle$ $\langle \text
 
 The concatenation and then execution of the signature and pubkey script above plays out as follows:
 \begin{enumerate}
-    \item OP\_TUCK places $\langle \text{Bob addr} \rangle$ under $\langle \text{Bob sig} \rangle$, OP\_CHECKSIGVERIFY ensures then that Bob has signed the transaction and removes $\langle \text{Bob addr} \rangle$ and $\langle \text{Bob sig} \rangle$ from the top of the stack.
-    \item OP\_CAT removes $\langle \text{Bob addr} \rangle$ and $\langle \text{nonce} \rangle$ from the top of the stack and replaces them with $\langle \text{Bob addr, nonce} \rangle$. OP\_DATASIGVERIFY then checks that Alice has indeed signed $\text{Bob addr, nonce}$.
-    \item OP\_EQUAL leaves true on the top of the stack if token ID and quantity persist from the Alice's assert output to Bob's revoke input, yielding a successful execution.
+    \item OP\_TUCK inserts a copy of $\langle \text{Bob addr} \rangle$ under $\langle \text{Bob sig} \rangle$.
+    \item OP\_CHECKSIGVERIFY ensures that Bob has signed the transaction and removes $\langle \text{Bob addr} \rangle$ and $\langle \text{Bob sig} \rangle$ from the top of the stack.
+    \item OP\_TUCK inserts a copy of $\langle \text{Bob addr} \rangle$ under $\langle \text{``Bob addr, nonce'' signed by Alice addr} \rangle$.
+    \item OP\_CAT removes $\langle \text{Bob addr} \rangle$ and $\langle \text{nonce} \rangle$ from the top of the stack and replaces them with $\langle \text{Bob addr, nonce} \rangle$. 
+    \item OP\_DATASIGVERIFY  checks that Alice has indeed signed ``$\text{Bob addr, nonce}$''.
+    \item OP\_SWAP swaps $\langle \text{Bob addr} \rangle$ and $\langle \text{token ID, quantity} \rangle$ leaving $\langle \text{token ID, quantity} \rangle$ at the top of the stack.
+    \item OP\_EQUALVERIFY checks that the token ID and quantity persist from the Alice's assert output to Bob's revoke input.
+    \item Execution is successfully performed leaving $\langle \text{Bob addr} \rangle$ as the only remaining item on the stack\footnote{The reason for this will be elucidated in Section~\ref{subsec:flexassertrevoke}}.
 \end{enumerate}
 
 % \begin{lstlisting}[title={\textbf{Bob's Proof Pubkey Script}}]
@@ -145,19 +156,18 @@ To summarize, a minting transaction is a transaction that meets the following cr
 \subsection{Flexible Asserts and Revoke Scripts}\label{subsec:flexassertrevoke}
 One would like token transfers to be subject to the same scripting possibilities allowed in typical Bitcoin transfers, e.g. a token issuer may want to create an escrow or a multisig transaction.
 
-In Section~\ref{subsec:basicownershiptx} we introduced the assert script (and later reused it in the minting transaction type) where ownership is passed from Alice to Bob when Bob can provide a revoke signature script $R$ such that when concatenated with Alice's assertion pubkey script $A$ the Bitcoin script interpreter completes execution of $RA$ and leaves true on the top of the stack. 
+In Section~\ref{subsec:basicownershiptx} we introduced the assert script (and later reused it in the minting transaction type) where ownership is passed from Alice to Bob when Bob can provide a revoke signature script $R$ such that when concatenated with Alice's assertion pubkey script $A$ the Bitcoin script interpreter completes execution of $RA$ and leaves only $\langle \text{Bob addr} \rangle$ in the stack. 
 
-Suppose now that Alice wants Bob to fulfill other requirements in addition to providing Alice's signature on her nonce and his address to claim ownership of the token. For example, suppose Bob is required to provide the preimage of a hash or an additional signature of a third-party. 
+Suppose now that Alice wants Bob to fulfil other requirements in addition to providing Alice's signature on her nonce and his address to claim ownership of the token. For example, suppose Bob is required to provide the preimage of a hash or an additional signature of a third-party. 
 
-This functionality can be achieved by extending the accepted format of the assert pubkey scripts to $A' = A \text{ OP\_VERIFY } Y$ where $Y$ is any pubkey script and revoke signature scripts to $R' = X R$ where $X$ is any signature script $P$. Concatenation of these two new assert and revoke format scripts yields
+This functionality can be achieved by extending the accepted format of the assert pubkey scripts to $A' = A Y$ where $Y$ is any pubkey script and revoke signature scripts to $R' = X R$ where $X$ is any signature script. Concatenation of these two new assert and revoke format scripts yields
 \[R' \; A',\]
-\[X \; R \; A \text{ OP\_VERIFY } Y,\]
-\[X \; \langle 1 \rangle \text{ OP\_VERIFY } Y,\]
+\[X \; R \; A \; Y,\]
 and hence
-\[X \; Y.\]
-Therefore scripts of this format require $X \; Y$ to execute successfully in addition to $R \; A$. 
+\[X \; \langle \text{Bob addr} \rangle \; Y.\]
+Therefore scripts of this format require $X \; \langle \text{Bob addr} \rangle \; Y$ to execute successfully in addition to $R \; A$. As $\langle \text{Bob addr} \rangle$ is sandwiched between $X$ and $Y$ it allows $Y$ to make use of Bob's identity. For example if $Y=\langle \text{Bob addr} \rangle \text{ OP\_EQUALVERIFY}$ the assert could only be revoked by Bob.
 
-Note that if $P$ is $\langle 1 \rangle$ and $R$ is empty then a flexible assert becomes equivalent to the original assert.
+Note that if $Y$ is empty and $R$ is empty then a flexible assert becomes equivalent to the original assert.
 
 % An addition requirement is that $X$ not contain OP\_IF for if it was permitted one could construct $X$ and $Y$ to manipulate the control flow, avoid execution of $R \; A \text{ OP\_VERIFY }$ and hence violate the conservation of token quantity between transactions. Similarly, in Section~\ref{subsec:gentrans} we encounter $X$ and $Y$ and impose the same requirement on $X$.
 
