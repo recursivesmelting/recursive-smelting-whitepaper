@@ -35,26 +35,28 @@ In Recursive Smelting we first construct a token residing in category (4), requi
 Additionally, tokens are exposed to all the possibilities enabled by Bitcoin's scripting language  (e.g. multisig, timelocks, etc.).
 
 \section{Overview}
-The Recursive Smelting Protocol enjoys versatility, SPV compatibility and permissionless creation, issuance and transfer of tokens. To allow these properties to coalesce the additional requirements are implementation of the opcode OP\_DATASIGVERIFY and the handling of verifiable computations.
+The Recursive Smelting Protocol enjoys versatility, SPV compatibility and permissionless creation, issuance and transfer of tokens. To allow these properties to coalesce we require the handling of verifiable computations.
 
 Token creation is performed via a genesis transaction containing metadata concerning the token, defining a unique token ID, and delegating minting permissions.
 
 Token minting and issuance is done via a ``minting transaction'' which mints and issues coins, and again delegates minting permissions.
 
-Token ownership is encoded publicly within the UTXO set indicated by an ``assert'' output within a valid minting transaction or ''ownership transaction''. Ownership is transferred by spending of this assert output via a ``revoke input'' contained in a subsequent ownership transaction. 
+Token ownership is indicated publicly within the UTXO set indicated by an ``assert'' output within a valid minting transaction or ''ownership transaction''. Ownership is transferred, as in Bitcoin, by creation of a transaction with outputs redeemable by the receiving party.
+
+%Ownership is transferred by spending of this assert output via a ``revoke input'' contained in a subsequent ownership transaction. 
 
 Data concerning token quantity and token ID is passed from primitive transaction to primitive transaction through assert scripts to revoke inputs and conserved as a result of the script structure. Conservation of token ID and quantity are achieved via adherence to user-enforced consensus rules. These rules define the format of primitive transactions (designed to conserve ID and quantity) and define a valid primitive transaction as one in which every input spent is also a valid primitive transaction.
 
 To prevent the need to traverse backwards through \emph{all} prior transactions to the genesis block, we attach a verifiable computation (more specifically a succinct non-interactive argument of knowledge, or SNARK) to each primitive transaction which, when verified, proves that the prior transactions are all themselves valid primitive transactions. Recursive proof techniques are employed to ensure that this method is tractable. 
 
 \section{Primitive Transactions}\label{sec:primtrans}
-The transaction graph of Recursive Smelting can be thought of as a closed subgraph of all Bitcoin transactions\footnote{Absolute closure is not feasible due to miners requiring transaction fees} and is composed by transactions adhering to one of several primitive transaction formats. Each primitive transaction (excluding the genesis transaction) contains an assert output which, when unspent indicates ownership of a certain quantity of tokens.  Validation that the transaction and its predecessors have adhered to the protocol verifies the asserted ownership. The transfer of ownership from Alice to Bob (in its most basic form) is achieved by Alice signing Bob's address (concatenated with a nonce), allowing Bob to spend Alice's ownership UTXO using a revoke input in an ownership transaction of his own.
+The transaction graph of Recursive Smelting can be thought of as a closed subgraph of all Bitcoin transactions\footnote{Absolute closure is not feasible due to miners requiring transaction fees} and is composed by transactions adhering to one of several primitive transaction formats. Each primitive transaction (excluding the genesis transaction) contains an assert output which, when unspent indicates ownership of a certain quantity of tokens. Validation that the transaction and its predecessors have adhered to the protocol verifies the asserted ownership. 
 
 \subsection{Ownership Transaction}\label{subsec:basicownershiptx}
-In the most simple case, ownership transfer can be described as the movement of tokens from Alice's wallet into Bob's wallet. Bob's ownership transaction consists of the following:
+In the most simple case, ownership transfer can be described as the movement of tokens from Alice's wallet into Bob's wallet. Alice's ownership transaction consists of the following:
 \begin{itemize}
     \item An output asserting Bob's ownership of a given quantity and ID of tokens
-    \item An input revoking the ownership assertion from Alice's ownership transaction
+    \item An input revoking the ownership assertion from previous ownership transactions
 \end{itemize}
 
 These ownership transactions are then linked sequentially as shown in the following schematic. Solid arrows denote signature scripts spending public-key scripts.
@@ -62,42 +64,15 @@ These ownership transactions are then linked sequentially as shown in the follow
 \import{res/}{basictx}
 \end{center}
 
-The format of the public-key and signature scripts below allow Alice to transfer ownership of her tokens paired to a nonce to Bob by means of signing Bob's address concatenated with that nonce. In a typical Bitcoin transaction, Alice's output ensures Bob's ability to transfer coins -- instead, here Alice's output ensures her ability to transfer tokens.
-
-%\begin{lstlisting}[title={\textbf{Alice's Assert PubKey Script}}]
-%OP_TUCK OP_CHECKSIGVERIFY
-%$\langle \text{nonce} \rangle$ OP_CAT $\langle \text{Alice addr} \rangle$ OP_DATASIGVERIFY
-%$\langle \text{token ID, quantity} \rangle$ OP_EQUAL
-%\end{lstlisting}
+The format of the assert and revoke scripts are given below where $X$ and $Y$ are any traditional signature and pubkey script.
 
 \begin{lstlisting}[title={\textbf{Alice's Assert PubKey Script}}]
-OP_TUCK OP_CHECKSIGVERIFY OP_TUCK
-$\langle \text{nonce} \rangle$ OP_CAT $\langle \text{Alice addr} \rangle$ OP_DATASIGVERIFY
-OP_SWAP $\langle \text{token ID, quantity} \rangle$ OP_EQUALVERIFY
+$\langle \text{token ID, quantity} \rangle$ OP_EQUALVERIFY Y
 \end{lstlisting}
 
 \begin{lstlisting}[title={\textbf{Bob's Revoke Signature Script}}]
-$\langle \text{token ID, quantity} \rangle$ 
-$\langle \text{``Bob addr, nonce'' signed by Alice addr} \rangle$ $\langle \text{Bob sig} \rangle$ $\langle \text{Bob addr} \rangle$ 
+X $\langle \text{token ID, quantity} \rangle$
 \end{lstlisting}
-
-The concatenation and then execution of the signature and pubkey script above plays out as follows:
-\begin{enumerate}
-    \item OP\_TUCK inserts a copy of $\langle \text{Bob addr} \rangle$ under $\langle \text{Bob sig} \rangle$.
-    \item OP\_CHECKSIGVERIFY ensures that Bob has signed the transaction and removes $\langle \text{Bob addr} \rangle$ and $\langle \text{Bob sig} \rangle$ from the top of the stack.
-    \item OP\_TUCK inserts a copy of $\langle \text{Bob addr} \rangle$ under $\langle \text{``Bob addr, nonce'' signed by Alice addr} \rangle$.
-    \item OP\_CAT removes $\langle \text{Bob addr} \rangle$ and $\langle \text{nonce} \rangle$ from the top of the stack and replaces them with $\langle \text{Bob addr, nonce} \rangle$. 
-    \item OP\_DATASIGVERIFY  checks that Alice has indeed signed ``$\text{Bob addr, nonce}$'', and subsequently removes its arguments from the stack.
-    \item OP\_SWAP swaps $\langle \text{Bob addr} \rangle$ and $\langle \text{token ID, quantity} \rangle$ leaving $\langle \text{token ID, quantity} \rangle$ at the top of the stack.
-    \item OP\_EQUALVERIFY checks that the token ID and quantity persist from the Alice's assert output to Bob's revoke input.
-    \item Execution is successfully performed leaving $\langle \text{Bob addr} \rangle$ as the only remaining item on the stack\footnote{The reason for this will be elucidated in Section~\ref{subsec:flexassertrevoke}}.
-\end{enumerate}
-
-% \begin{lstlisting}[title={\textbf{Bob's Proof Pubkey Script}}]
-% $\langle \text{proof} \rangle$ OP_RETURN
-% \end{lstlisting}
-
-One might wonder; why require that Alice signs a Bob's address (again, concatenated with a nonce) to transfer ownership when she could instead pass ownership by using a hashlocked output and supplying Bob with a preimage? This is answered with the following scenario: Suppose Alice presented Bob with the preimage and he then creates an ownership transaction with a revoke input script containing the preimage. Notice that the preimage is now public knowledge to the nodes on the network, opening up the possibility for them to claim ownership before Bob. The nonce is included in the signed data so that the same signature cannot be reused by Bob to claim additional tokens without Alice's intent.
 
 The format of the ownership transaction naturally generalizes to multiple inputs and outputs and supports multiple token IDs within a single transaction.
 
@@ -127,8 +102,7 @@ This metadata instantiates variables used in the token's consensus rules. For ex
 Mining delegation is accomplished via an output whose pubkey script is of the form:
 
 \begin{lstlisting}[title={\textbf{Minting PubKey Script}}]
-$\langle \text{token ID} \rangle$ OP_EQUALVERIFY
-Y
+$\langle \text{token ID} \rangle$ OP_EQUALVERIFY Y
 \end{lstlisting}
 where $Y$ can be any pubkey script with signature script $X$. 
 
@@ -159,24 +133,6 @@ To summarize, a minting transaction is a transaction that meets the following cr
     \item The token ID in the assert and minting pubkey scripts must match the token ID in the minting signature script
 \end{itemize}
 
-\subsection{Flexible Asserts and Revoke Scripts}\label{subsec:flexassertrevoke}
-One would like token transfers to be subject to the same scripting possibilities allowed in typical Bitcoin transfers, e.g. a token issuer may want to create an escrow or a multisig transaction.
-
-In Section~\ref{subsec:basicownershiptx} we introduced the assert script (and later reused it in the minting transaction type) where ownership is passed from Alice to Bob when Bob can provide a revoke signature script $R$ such that when concatenated with Alice's assertion pubkey script $A$ the Bitcoin script interpreter completes execution of $R \; A$ and leaves only $\langle \text{Bob addr} \rangle$ in the stack. 
-
-Suppose now that Alice wants Bob to fulfill other requirements in addition to providing Alice's signature to claim ownership of the token. For example, suppose Bob is required to provide the preimage of a hash or an additional signature of a third-party. 
-
-This functionality can be achieved by extending the accepted format of the assert pubkey scripts to $A' = A \; Y$ where $Y$ is any pubkey script and revoke signature scripts to $R' = X \; R$ where $X$ is any signature script. Concatenation of these two new assert and revoke format scripts yields
-\[R' \; A',\]
-\[X \; R \; A \; Y,\]
-and hence
-\[X \; \langle \text{Bob addr} \rangle \; Y.\]
-Therefore scripts of this format require $X \; \langle \text{Bob addr} \rangle \; Y$ to execute successfully in addition to $R \; A$. Sandwiching $\langle \text{Bob addr} \rangle$ between $X$ and $Y$ allows $Y$ for the use of Bob's identity. For example if $Y=\langle \text{Bob addr} \rangle \text{ OP\_EQUAL}$ the assert could only be revoked by Bob.
-
-Note that if $Y$ and $R$ are both empty then a flexible assert becomes equivalent to the original assert.
-
-% An addition requirement is that $X$ not contain OP\_IF for if it was permitted one could construct $X$ and $Y$ to manipulate the control flow, avoid execution of $R \; A \text{ OP\_VERIFY }$ and hence violate the conservation of token quantity between transactions. Similarly, in Section~\ref{subsec:gentrans} we encounter $X$ and $Y$ and impose the same requirement on $X$.
-
 \section{Consensus Rules}
 In Recursive Smelting the protocol requires users adhere to consensus on what constitutes a valid ownership transaction. The consensus rules can be stated recursively as--a  transaction is a valid primitive transaction if:
     \begin{enumerate}
@@ -185,11 +141,9 @@ In Recursive Smelting the protocol requires users adhere to consensus on what co
     \end{enumerate}
     
 The recursion defines a traversal back through the transaction tree through ownership transactions, then minting transactions, then the inevitable root: the genesis transaction. At each step of the traversal one checks whether each transaction adheres to the primitive transaction format, and on finding an exception deems every subsequent transaction invalid.
-
-%This is the directed acyclic graph approach described in SLP. While having some benefits over SLP, specifically the features introduced in Section~\ref{subsec:flexassertrevoke} we go a step further and enable full SPV compatibility via the use of recursive proofs.
     
 \section{Proofs}
-While possible, it is undesirable to trace back through the transaction graph to the genesis transaction and verify the consensus rules hold as it precludes SPV compatibility. We solve this conundrum by supplementing each primitive transaction with a proof that the revoke and mint signature inputs are spending assert and mint pubkey outputs within valid ownership or minting transactions respectively. In the final incarnation proofs will verify the entire transaction graph by verifying proofs given \emph{only} in the prior primitive transactions by using recursion.
+While possible, it is undesirable to trace back through the transaction graph to the genesis transaction and verify the consensus rules hold as it precludes SPV compatibility. We solve this conundrum by supplementing each primitive transaction with a proof that the revoke and mint signature inputs are spending assert and mint pubkey outputs within valid ownership or minting transactions respectively. In the final incarnation proofs will validate the entire transaction graph by verifying proofs given \emph{only} in the prior primitive transactions by using recursion.
 
 \begin{center}
     \import{res/}{basictxproofs}
@@ -199,17 +153,16 @@ We adopt notation from order theory where $a \lessdot b$ means that transaction 
 \subsection{Non-recursive Proofs}
 Acting as an intermediary step, we describe the construction of a non-recursive proof.
 
-% which could be supplemented to ownership transactions to allow for enforcement of the consensus rules without evaluation of the entire transaction history
-
-Suppose there exists a primitive transaction $y$, we attach proof $P$ taking the sequence of block headers $h_{0}, \dots, h_{n}$ (associated with blocks $b_{0}, \dots, b_{n}$) as arguments and showing the following statements to be true:
+Consider a token who's genesis transaction is contained in some block $b_{n}$ (where $n$ is its block height). Suppose there exists a primitive transaction $y$ in block $b_{m}$, we attach proof $P$ taking the sequence of Merkle roots $\mathcal{M}_{n}, \dots, \mathcal{M}_{m}$ (associated with blocks $b_{n}, \dots, b_{m}$) as public inputs and showing the following statements to be true:
 For each $x < y$ we have that
 \begin{enumerate}
     \item $x$ adheres to the primitive transactions format, and
-    \item there exists a Merkle proof showing that $x$ is contained within a block $b_{i}$ associated to $h_{i}$.
-    % \item there is a valid proof-of-work chain connecting the $h_{i}$'s.
+    \item there exists a Merkle branch showing that $x$ is contained with root $\mathcal{M}_{i}$ where $n \leq i \leq m$.
 \end{enumerate}
 
-For a user to then validate $y$ they are required to verify $P(h_{0}, \dots, h_{n})$ is true and that $y$ itself is a primitive transaction.
+For a user to validate $y$ they then must verify
+\[v(P, (\mathcal{M}_{n}, \dots, \mathcal{M}_{m})) = \text{true}\] 
+where $v$ is the verification function and that $y$ itself is a primitive transaction.
 
 Advances in cryptography have allowed proofs to be verified succinctly--that is, verification time is independent of the statement proved and takes milliseconds using consumer grade hardware.
 
@@ -217,14 +170,14 @@ Advances in cryptography have allowed proofs to be verified succinctly--that is,
 
 While a proof of this type speeds up validation of primitive transactions, its downsides are:
 \begin{itemize}
-    \item the time required to prove such a statement is prohibitive, and
+    \item the time required to prove such a statement may be prohibitive, and
     \item the owner needs to traverse the transaction tree to collect its terms, making it non-compatible with SPV style wallets
 \end{itemize}
 
 \subsection{Recursive Proofs}
 To fix the problems described in the previous section we employ recursion. 
 
-Suppose there exists an ownership transaction $y$, we attached a proof $P$ taking the sequence of block headers $h_{0}, \dots, h_{n}$ (associated with blocks $b_{0}, \dots, b_{n}$) as arguments and showing the following statements to be true:
+Again, consider a token who's genesis transaction is contained in some block $b_{n}$ (where $n$ is its block height). Suppose there exists a primitive transaction $y$ in block $b_{m}$, we attach proof $P$ taking the sequence of Merkle roots $\mathcal{M}_{n}, \dots, \mathcal{M}_{m}$ (associated with blocks $b_{n}, \dots, b_{m}$) as public inputs and showing the following statements to be true:
 For each $x \lessdot y$ we have that
 \begin{enumerate}
     \item $x$ adheres to the primitive transactions format,
@@ -232,31 +185,32 @@ For each $x \lessdot y$ we have that
     \item there exists a Merkle proof showing that $x$ is contained within a block $b_{i}$ associated to $h_{i}$
 \end{enumerate}
 
-Again, for a user to then validate $x$ they are required to verify $P(h_{0}, \dots, h_{n})$ is true and that $y$ itself is a primitive transaction.
+Again, for a user to validate $y$ they then must verify
+\[v(P, (\mathcal{M}_{n}, \dots, \mathcal{M}_{m})) = \text{true}\] 
+where $v$ is the verification function and that $y$ itself is a primitive transaction.
 
 Verification of recursive proofs is fast, and proving is fast and SPV compatible as only $x$ such that $x \lessdot y$ are required terms (rather than a full transaction tree).
 
 \section{Applications}
 \subsection{Provable Token Burns}
-Provably burning tokens is as easy as creating a flexible assert with $Y$ being OP\_RETURN.
+Provably burning tokens is as easy as creating an assert with $Y$ being OP\_RETURN.
 \subsection{Token Issue Escrow}
 Suppose a token issuer wanted to provably release 30\% of tokens initially and then the rest at a later date.
 
 This can be accomplished by producing a mint transaction with no mint pubkey script and the following asserts:
 \begin{itemize}
-    \item a standard assert with $0.3*\text{total quantity}$ tokens, and
-    \item a flexible assert with the remaining $0.7*\text{total quantity}$ tokens with $Y$ including a timelock.
+    \item an assert with $0.3*\text{total quantity}$ tokens, and
+    \item an assert with the remaining $0.7*\text{total quantity}$ tokens with $Y$ including a timelock.
 \end{itemize}
 
 \subsection{Atomic Swaps: Bitcoin-to-Token}
-Suppose Alice wants to swap her $n$ Tokens for Bob's $m$ Bitcoins. Alice creates a flexible assert holding $n$ tokens with $Y$ ensuring only Bob is able to redeem before a timelock expires. Bob then creates an output redeemable for $m$ bitcoin when Alice provides her signature, allowing Bob to spend before an identical timelock.
+One follows the exact same atomic swap protocol as before with the token seller conforming to assert/revoke format.
 
 This allows for a decentralized exchange of tokens with bitcoin being the base pair.
 
 \subsection{Anyone-Can-Revoke}
 In the circumstance that a token is widely traded and known to have value, the possibility to pay the transaction fee in said token arises.
 
-To achieve this one could use a flexible assert with $Y$ including all data needed for revocation (a newly generated private/public-key pair and corresponding signature).
-
+To achieve this one could include an assert with $Y = \langle \text{true} \rangle$.
 \end{multicols}
 \end{document}
