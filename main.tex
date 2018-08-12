@@ -177,7 +177,7 @@ While a proof of this type speeds up validation of primitive transactions, its d
 \subsection{Recursive Proofs}
 To fix the problems described in the previous section we employ recursion. 
 
-Again, consider a token who's genesis transaction is contained in some block $b_{n}$ (where $n$ is its block height). Suppose there exists a primitive transaction $y$ in block $b_{m}$, we attach proof $P$ taking the sequence of Merkle roots $\mathcal{M}_{n}, \dots, \mathcal{M}_{m}$ (associated with blocks $b_{n}, \dots, b_{m}$) as public inputs and showing the following statements to be true:
+Again, consider a token whose genesis transaction is contained in some block $b_{n}$ (where $n$ is its block height). Suppose there exists a primitive transaction $y$ in block $b_{m}$, we attach proof $P$ taking the sequence of Merkle roots $\mathcal{M}_{n}, \dots, \mathcal{M}_{m}$ (associated with blocks $b_{n}, \dots, b_{m}$) as public inputs and showing the following statements to be true:
 For each $x \lessdot y$ we have that
 \begin{enumerate}
     \item $x$ adheres to the primitive transactions format,
