@@ -12,10 +12,10 @@
 \end{abstract}
 \maketitle
 \begin{multicols}{2}
-	
+
 
 \section{Introduction}
-During Bitcoin's history, there have been several proposed token proposals. In recent months, a new wave of interest has resulted in the creation of many more. 
+During Bitcoin's history, there have been several proposed token proposals. In recent months, a new wave of interest has resulted in the creation of many more.
 
 Existing proposals typically fall into four distinct categories: \begin{enumerate}
     \item Requiring a change to the Bitcoin protocol (e.g.\ \href{https://docs.google.com/document/d/1X-yrqBJNj6oGPku49krZqTMGNNEWnUJBRFjX7fJXvTs}{GROUP} and \href{https://en.wikipedia.org/wiki/RootStock}{RootStock})
@@ -43,14 +43,14 @@ Token minting and issuance is done via a ``minting transaction'' which mints and
 
 Token ownership is indicated publicly within the UTXO set indicated by an ``assert'' output within a valid minting transaction or ''ownership transaction''. Ownership is transferred, as in Bitcoin, by creation of a transaction with outputs redeemable by the receiving party.
 
-%Ownership is transferred by spending of this assert output via a ``revoke input'' contained in a subsequent ownership transaction. 
+%Ownership is transferred by spending of this assert output via a ``revoke input'' contained in a subsequent ownership transaction.
 
 Data concerning token quantity and token ID is passed from primitive transaction to primitive transaction through assert scripts to revoke inputs and conserved as a result of the script structure. Conservation of token ID and quantity are achieved via adherence to user-enforced consensus rules. These rules define the format of primitive transactions (designed to conserve ID and quantity) and define a valid primitive transaction as one in which every input spent is also a valid primitive transaction.
 
-To prevent the need to traverse backwards through \emph{all} prior transactions to the genesis block, we attach a verifiable computation (more specifically a succinct non-interactive argument of knowledge, or SNARK) to each primitive transaction which, when verified, proves that the prior transactions are all themselves valid primitive transactions. Recursive proof techniques are employed to ensure that this method is tractable. 
+To prevent the need to traverse backwards through \emph{all} prior transactions to the genesis block, we attach a verifiable computation (more specifically a succinct non-interactive argument of knowledge, or SNARK) to each primitive transaction which, when verified, proves that the prior transactions are all themselves valid primitive transactions. Recursive proof techniques are employed to ensure that this method is tractable.
 
 \section{Primitive Transactions}\label{sec:primtrans}
-The transaction graph of Recursive Smelting can be thought of as a closed subgraph of all Bitcoin transactions\footnote{Absolute closure is not feasible due to miners requiring transaction fees} and is composed by transactions adhering to one of several primitive transaction formats. Each primitive transaction (excluding the genesis transaction) contains an assert output which, when unspent indicates ownership of a certain quantity of tokens. Validation that the transaction and its predecessors have adhered to the protocol verifies the asserted ownership. 
+The transaction graph of Recursive Smelting can be thought of as a closed subgraph of all Bitcoin transactions\footnote{Absolute closure is not feasible due to miners requiring transaction fees} and is composed by transactions adhering to one of several primitive transaction formats. Each primitive transaction (excluding the genesis transaction) contains an assert output which, when unspent indicates ownership of a certain quantity of tokens. Validation that the transaction and its predecessors have adhered to the protocol verifies the asserted ownership.
 
 \subsection{Ownership Transaction}\label{subsec:basicownershiptx}
 In the most simple case, ownership transfer can be described as the movement of tokens from Alice's wallet into Bob's wallet. Alice's ownership transaction consists of the following:
@@ -99,12 +99,12 @@ This is concatenated and put into an output of the genesis transaction using OP\
 
 This metadata instantiates variables used in the token's consensus rules. For example if a burn address is provided, the ownership transaction format should be changed to allow for the burn address to revoke, but never assert ownership.\footnote{At the time of this writing, this feature has not yet been implemented}
 
-Mining delegation is accomplished via an output whose pubkey script is of the form:
+Minting delegation is accomplished via an output whose pubkey script is of the form:
 
 \begin{lstlisting}[title={\textbf{Minting PubKey Script}}]
 $\langle \text{token ID} \rangle$ OP_EQUALVERIFY Y
 \end{lstlisting}
-where $Y$ can be any pubkey script with signature script $X$. 
+where $Y$ can be any pubkey script with signature script $X$.
 
 To summarize, a genesis transaction is a transaction that meets the following criteria:
 \begin{itemize}
@@ -120,7 +120,7 @@ In a similar vein to the ownership transaction format a minting transaction must
 \begin{lstlisting}[title={\textbf{Minting Signature Script}}]
 X $\langle \text{token ID} \rangle$
 \end{lstlisting}
-where $X$ is the signature script of the $Y$ given in the ``Minting Pubkey Script'' of Section~\ref{subsec:gentrans}. A simple example of such a transaction graph could be: 
+where $X$ is the signature script of the $Y$ given in the ``Minting Pubkey Script'' of Section~\ref{subsec:gentrans}. A simple example of such a transaction graph could be:
 \begin{center}
 \import{res/}{mintingtx}
 \end{center}
@@ -139,9 +139,9 @@ In Recursive Smelting the protocol requires users adhere to consensus on what co
         \item It adheres to one of the primitive transaction formats,
         \item All inputs with revoke or minting pubkey scripts must  spend outputs in a transaction with primitive transaction format.
     \end{enumerate}
-    
+
 The recursion defines a traversal back through the transaction tree through ownership transactions, then minting transactions, then the inevitable root: the genesis transaction. At each step of the traversal one checks whether each transaction adheres to the primitive transaction format, and on finding an exception deems every subsequent transaction invalid.
-    
+
 \section{Proofs}
 While possible, it is undesirable to trace back through the transaction graph to the genesis transaction and verify the consensus rules hold as it precludes SPV compatibility. We solve this conundrum by supplementing each primitive transaction with a proof that the revoke and mint signature inputs are spending assert and mint pubkey outputs within valid ownership or minting transactions respectively. In the final incarnation proofs will validate the entire transaction graph by verifying proofs given \emph{only} in the prior primitive transactions by using recursion.
 
@@ -149,7 +149,7 @@ While possible, it is undesirable to trace back through the transaction graph to
     \import{res/}{basictxproofs}
 \end{center}
 
-We adopt notation from order theory where $a \lessdot b$ means that transaction $b$ has a (mint signature and revoke) input spending transaction $b$'s (mint pubkey and assert) output.  Additionally, $a < b$ means there exists a sequence $a \lessdot \dots \lessdot b$.
+We adopt notation from order theory where $a \lessdot b$ means that transaction $b$ has a (mint signature and revoke) input spending transaction $a$'s (mint pubkey and assert) output.  Additionally, $a < b$ means there exists a sequence $a \lessdot \dots \lessdot b$.
 \subsection{Non-recursive Proofs}
 Acting as an intermediary step, we describe the construction of a non-recursive proof.
 
@@ -161,7 +161,7 @@ For each $x < y$ we have that
 \end{enumerate}
 
 For a user to validate $y$ they then must verify
-\[v(P, (\mathcal{M}_{n}, \dots, \mathcal{M}_{m})) = \text{true}\] 
+\[v(P, (\mathcal{M}_{n}, \dots, \mathcal{M}_{m})) = \text{true}\]
 where $v$ is the verification function and that $y$ itself is a primitive transaction.
 
 Advances in cryptography have allowed proofs to be verified succinctly--that is, verification time is independent of the statement proved and takes milliseconds using consumer grade hardware.
@@ -175,7 +175,7 @@ While a proof of this type speeds up validation of primitive transactions, its d
 \end{itemize}
 
 \subsection{Recursive Proofs}
-To fix the problems described in the previous section we employ recursion. 
+To fix the problems described in the previous section we employ recursion.
 
 Again, consider a token whose genesis transaction is contained in some block $b_{n}$ (where $n$ is its block height). Suppose there exists a primitive transaction $y$ in block $b_{m}$, we attach proof $P$ taking the sequence of Merkle roots $\mathcal{M}_{n}, \dots, \mathcal{M}_{m}$ (associated with blocks $b_{n}, \dots, b_{m}$) as public inputs and showing the following statements to be true:
 For each $x \lessdot y$ we have that
@@ -186,7 +186,7 @@ For each $x \lessdot y$ we have that
 \end{enumerate}
 
 Again, for a user to validate $y$ they then must verify
-\[v(P, (\mathcal{M}_{n}, \dots, \mathcal{M}_{m})) = \text{true}\] 
+\[v(P, (\mathcal{M}_{n}, \dots, \mathcal{M}_{m})) = \text{true}\]
 where $v$ is the verification function and that $y$ itself is a primitive transaction.
 
 Verification of recursive proofs is fast, and proving is fast and SPV compatible as only $x$ such that $x \lessdot y$ are required terms (rather than a full transaction tree).
