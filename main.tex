@@ -32,7 +32,7 @@ Existing proposals typically fall into four distinct categories: \begin{enumerat
 
 In Recursive Smelting we first construct a token residing in category (4), requiring validation of the chain of prior token transfer back to their genesis. We then supplement each transfer with a (constant sized) proof of the token's history -- removing this requirement (4) entirely and replacing it with a fast and secure cryptographically verifiable computation.
 
-Additionally, tokens are exposed to all the possibilities enabled by Bitcoin's scripting language  (e.g. multisig, timelocks, etc.).
+Additionally, tokens are exposed to all the possibilities enabled by Bitcoin's scripting language (e.g. multisig, timelocks, etc.).
 
 \section{Overview}
 The Recursive Smelting Protocol enjoys versatility, SPV compatibility and permissionless creation, issuance and transfer of tokens. To allow these properties to coalesce we require the handling of verifiable computations.
@@ -137,7 +137,7 @@ To summarize, a minting transaction is a transaction that meets the following cr
 In Recursive Smelting the protocol requires users adhere to consensus on what constitutes a valid ownership transaction. The consensus rules can be stated recursively as--a  transaction is a valid primitive transaction if:
     \begin{enumerate}
         \item It adheres to one of the primitive transaction formats,
-        \item All inputs with revoke or minting pubkey scripts must  spend outputs in a transaction with primitive transaction format.
+        \item All inputs with revoke or minting pubkey scripts must spend outputs in a transaction with primitive transaction format.
     \end{enumerate}
 
 The recursion defines a traversal back through the transaction tree through ownership transactions, then minting transactions, then the inevitable root: the genesis transaction. At each step of the traversal one checks whether each transaction adheres to the primitive transaction format, and on finding an exception deems every subsequent transaction invalid.
@@ -149,11 +149,11 @@ While possible, it is undesirable to trace back through the transaction graph to
     \import{res/}{basictxproofs}
 \end{center}
 
-We adopt notation from order theory where $a \lessdot b$ means that transaction $b$ has a (mint signature and revoke) input spending transaction $a$'s (mint pubkey and assert) output.  Additionally, $a < b$ means there exists a sequence $a \lessdot \dots \lessdot b$.
+We adopt notation from order theory where $a \lessdot b$ means that transaction $b$ has a (mint signature and revoke) input spending transaction $a$'s (mint pubkey and assert) output. Additionally, $a < b$ means there exists a sequence $a \lessdot \dots \lessdot b$.
 \subsection{Non-recursive Proofs}
 Acting as an intermediary step, we describe the construction of a non-recursive proof.
 
-Consider a token who's genesis transaction is contained in some block $b_{n}$ (where $n$ is its block height). Suppose there exists a primitive transaction $y$ in block $b_{m+1}$, we attach proof $P$ taking the sequence of Merkle roots $\mathcal{M}_{n}, \dots, \mathcal{M}_{m}$ (associated with blocks $b_{n}, \dots, b_{m}$) as public inputs, the transactions $x < y$ and their Merkle proofs as private inputs and showing the following statements to be true:
+Consider a token whose genesis transaction is contained in some block $b_{n}$ (where $n$ is its block height). Suppose there exists a primitive transaction $y$ in block $b_{m+1}$, we attach proof $P$ taking the sequence of Merkle roots $\mathcal{M}_{n}, \dots, \mathcal{M}_{m}$ (associated with blocks $b_{n}, \dots, b_{m}$) as public inputs, the transactions $x < y$ and their Merkle proofs as private inputs and showing the following statements to be true:
 For each $x < y$ we have that
 \begin{enumerate}
     \item $x$ adheres to the primitive transactions format, and
